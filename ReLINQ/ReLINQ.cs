@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ReLINQ
 {
-    public static class ReLINQ
+    public static class ReLinq
     {
         /// <summary>
         /// 
@@ -84,6 +84,46 @@ namespace ReLINQ
                     yield return item;
                 }
                 index++;
+            }
+        }
+
+        /// <summary>
+        /// Projects items of <see cref="IEnumerable{TSource}"/> into <see cref="IEnumerable{TResult}"/>
+        /// </summary>
+        /// <typeparam name="TSource">source sequence</typeparam>
+        /// <typeparam name="TResult">projection result</typeparam>
+        /// <param name="sequence"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> sequence,
+            Func<TSource, TResult> selector)
+        {
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            if (sequence == null)
+            {
+                throw new ArgumentNullException(nameof(sequence));
+            }
+
+            return SelectImplementation(sequence, selector);
+        }
+
+        /// <summary>
+        /// Inner implementation of select
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="sequence"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> SelectImplementation<TSource, TResult>(this IEnumerable<TSource> sequence, Func<TSource,TResult> selector)
+        {
+            foreach (TSource item in sequence)
+            {
+                yield return selector(item);
             }
         }
 

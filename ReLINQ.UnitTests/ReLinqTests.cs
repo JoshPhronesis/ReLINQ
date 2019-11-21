@@ -36,5 +36,13 @@ namespace ReLINQ.UnitTests
                 select x;
             CollectionAssert.AreEqual(result, new int[] { 1, 3, 2, 1 });
         }
+
+        [Test]
+        public void Select_SimpleProjectionToDifferentType()
+        {
+            int[] source = { 1, 5, 2 };
+            var result = source.Select(x => x.ToString());
+            CollectionAssert.AreEqual(result, new String[] { "1", "5", "2" });
+        }
     }
 }
