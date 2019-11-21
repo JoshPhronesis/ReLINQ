@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ReLINQ
@@ -127,5 +128,82 @@ namespace ReLINQ
             }
         }
 
+        /// <summary>
+        /// Generates a sequence of <see cref="int"/> within the specified range
+        /// </summary>
+        /// <param name="start">start value</param>
+        /// <param name="count">number of integers</param>
+        /// <returns></returns>
+        public static IEnumerable<int> Range(int start, int count)
+        {
+            if (count < 0)
+            {
+                throw  new ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if ((long)start + (long)count >int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count));
+            }
+
+            return RangeImplementation(start, count);
+        }
+
+        /// <summary>
+        /// Generates a sequence of <see cref="int"/> within the specified range
+        /// </summary>
+        /// <param name="start">start value</param>
+        /// <param name="count">number of integers</param>
+        /// <returns></returns>
+        private static IEnumerable<int> RangeImplementation(int start, int count)
+        {
+            int finalElement = start + count;
+            while (start < finalElement)
+            {
+                yield return start;
+                start++;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new empty sequence of type specified
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<TResult> Empty<TResult>()
+        {
+            return EmptyEnumerable<TResult>.Instance;
+        }
+
+        private class EmptyEnumerable<T> : IEnumerable<T>, IEnumerator<T>
+        {
+            internal static readonly IEnumerable<T> Instance = new EmptyEnumerable<T>();
+            // Prevent construction elsewhere
+            private EmptyEnumerable()
+            {
+            }
+            public IEnumerator<T> GetEnumerator()
+            {
+                return this;
+            }
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this;
+            }
+            public T Current => throw new InvalidOperationException();
+
+            object IEnumerator.Current => throw new InvalidOperationException();
+
+            public void Dispose()
+            {
+                // No-op
+            }
+            public bool MoveNext() => false;
+
+            public void Reset()
+            {
+                // No-op
+            }
+        }
     }
 }
