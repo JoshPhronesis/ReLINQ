@@ -175,6 +175,158 @@ namespace ReLINQ
             return EmptyEnumerable<TResult>.Instance;
         }
 
+        /// <summary>
+        /// Repeats an instance n-times
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="element"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> Repeat<TResult>(TResult element, int count)
+        {
+            if (count < 0)
+            {
+                throw  new ArgumentException(nameof(count));
+            }
+
+            return RepeatImplementation(element, count);
+        }
+
+        /// <summary>
+        /// Repeat implementation details
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="element"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> RepeatImplementation<TResult>(TResult element, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return element;
+            }
+        }
+
+        /// <summary>
+        /// Returns the number of elements in a sequence
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="sequence"></param>
+        /// <returns><see cref="int"/></returns>
+        public static int Count<TSource>(this IEnumerable<TSource> sequence)
+        {
+            if (sequence == null)
+            {
+                throw new ArgumentNullException(nameof(sequence));
+            }
+
+            int count = 0;
+            checked
+            {
+                foreach (var item in sequence)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// Returns the number of items in a sequence that is qualified by the predicate
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="sequence"></param>
+        /// <param name="predicate"></param>
+        /// <returns><see cref="int"/></returns>
+        public static int Count<TSource>(this IEnumerable<TSource> sequence, Func<TSource, bool> predicate)
+        {
+            if (sequence==null)
+            {
+                throw new ArgumentNullException(nameof(sequence));
+            }
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
+            int count = 0;
+            checked
+            {
+                foreach (var item in sequence)
+                {
+                    if (predicate(item))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// Returns number of items in a sequence
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="sequence"></param>
+        /// <returns><see cref="long"/></returns>
+        public static long LongCount<TSource>(this IEnumerable<TSource> sequence)
+        {
+            if (sequence == null)
+            {
+                throw new ArgumentNullException(nameof(sequence));
+            }
+
+            long count = 0;
+            checked
+            {
+                foreach (var item in sequence)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// Returns the number of items in a sequence that is qualified by the predicate
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="sequence"></param>
+        /// <param name="predicate"></param>
+        /// <returns><see cref="int"/></returns>
+        public static long LongCount<TSource>(this IEnumerable<TSource> sequence, Func<TSource, bool> predicate)
+        {
+            if (sequence == null)
+            {
+                throw new ArgumentNullException(nameof(sequence));
+            }
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
+            long count = 0;
+            checked
+            {
+                foreach (var item in sequence)
+                {
+                    if (predicate(item))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// <see cref="EmptyEnumerable{T}"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         private class EmptyEnumerable<T> : IEnumerable<T>, IEnumerator<T>
         {
             internal static readonly IEnumerable<T> Instance = new EmptyEnumerable<T>();
