@@ -166,13 +166,13 @@ namespace ReLINQ
         }
 
         /// <summary>
-        /// Creates a new empty sequence of type specified
+        /// Creates a new empty sequence of type <paramref name="TResult"/>
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>
         public static IEnumerable<TResult> Empty<TResult>()
         {
-            return EmptyEnumerable<TResult>.Instance;
+            return (IEnumerable<TResult>)Array.Empty<TResult>();
         }
 
         /// <summary>
@@ -324,37 +324,256 @@ namespace ReLINQ
         }
 
         /// <summary>
-        /// <see cref="EmptyEnumerable{T}"/>
+        /// Concatenates a sequence with another sequence
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        private class EmptyEnumerable<T> : IEnumerable<T>, IEnumerator<T>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns><see cref="IEnumerable{T}"/></returns>
+        public static IEnumerable<TSource> Concat<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second)
         {
-            internal static readonly IEnumerable<T> Instance = new EmptyEnumerable<T>();
-            // Prevent construction elsewhere
-            private EmptyEnumerable()
+            if (first==null)
             {
+                throw new ArgumentNullException(nameof(first));
             }
-            public IEnumerator<T> GetEnumerator()
-            {
-                return this;
-            }
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this;
-            }
-            public T Current => throw new InvalidOperationException();
 
-            object IEnumerator.Current => throw new InvalidOperationException();
-
-            public void Dispose()
+            if (second==null)
             {
-                // No-op
+                throw new ArgumentNullException(nameof(second));
             }
-            public bool MoveNext() => false;
 
-            public void Reset()
+            return ConcatImplementation(first, second);
+        }
+
+        /// <summary>
+        /// Concatenates a sequence with another sequence
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns><see cref="IEnumerable{T}"/></returns>
+        private static IEnumerable<TSource> ConcatImplementation<TSource>(IEnumerable<TSource> first, IEnumerable<TSource> second)
+        {
+            foreach (TSource item in first)
             {
-                // No-op
+                yield return item;
+            }
+
+            first = null;
+
+            foreach (TSource item in second)
+            {
+                yield return item;
+            }
+        }
+
+        /// <summary>
+        /// Foreach element in the <see cref="IEnumerable{T}"/>, generates an <see cref="IEnumerable{T}"/> and returns a flattened <see cref="IEnumerable{T}"/> of the results
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
+            Func<TSource, IEnumerable<TResult>> selector)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (selector == null)
+            {
+                throw  new ArgumentNullException(nameof(selector));
+            }
+
+            return SelectManyImplementation(source, selector);
+        }
+
+
+        /// <summary>
+        /// Foreach element in the <see cref="IEnumerable{T}"/>, generates an <see cref="IEnumerable{T}"/> and returns a flattened <see cref="IEnumerable{T}"/> of the results
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> SelectManyImplementation<TResult, TSource>(IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        {
+            foreach (TSource item in source)
+            {
+                foreach (TResult projection in selector(item))
+                {
+                    yield return projection;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Foreach element in the <see cref="IEnumerable{T}"/>, generates an <see cref="IEnumerable{T}"/> and returns a flattened <see cref="IEnumerable{T}"/> of the results
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source,
+            Func<TSource, int, IEnumerable<TResult>> selector)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
+            return SelectManyImplementation(source, selector);
+        }
+
+        /// <summary>
+        /// Foreach element in the <see cref="IEnumerable{T}"/>, generates an <see cref="IEnumerable{T}"/> and returns a flattened <see cref="IEnumerable{T}"/> of the results
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> SelectManyImplementation<TResult, TSource>(IEnumerable<TSource> source, Func<TSource,int, IEnumerable<TResult>> selector)
+        {
+            int index = 0;
+            foreach (TSource item in source)
+            {
+                foreach (TResult projection in selector(item, index))
+                {
+                    yield return projection;
+                    index++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TCollection"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="collectionSelector"></param>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> SelectMany<TSource, TCollection, TResult>(
+            this IEnumerable<TSource> source,
+            Func<TSource, int, IEnumerable<TCollection>> collectionSelector,
+            Func<TSource, TCollection, TResult> resultSelector)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (collectionSelector == null)
+            {
+                throw new ArgumentNullException(nameof(collectionSelector));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
+
+            return SelectManyImplementation(source, collectionSelector, resultSelector);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TCollection"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="collectionSelector"></param>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> SelectManyImplementation<TSource, TCollection, TResult>(
+            IEnumerable<TSource> source,
+            Func<TSource, int, IEnumerable<TCollection>> collectionSelector,
+            Func<TSource, TCollection, TResult> resultSelector)
+        {
+            int index = 0;
+            foreach (TSource item in source)
+            {
+                foreach (TCollection collectionItem in collectionSelector(item, index++))
+                {
+                    yield return resultSelector(item, collectionItem);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TCollection"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="collectionSelector"></param>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public static IEnumerable<TResult> SelectMany<TSource, TCollection, TResult>(
+            this IEnumerable<TSource> source,
+            Func<TSource, IEnumerable<TCollection>> collectionSelector,
+            Func<TSource, TCollection, TResult> resultSelector)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (collectionSelector == null)
+            {
+                throw new ArgumentNullException(nameof(collectionSelector));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
+
+            foreach (TSource item in source)
+            {
+                foreach (TCollection collectionItem in collectionSelector(item))
+                {
+                    yield return resultSelector(item, collectionItem);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TCollection"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="collectionSelector"></param>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        private static IEnumerable<TResult> SelectManyImplementation<TSource, TCollection, TResult>(
+            IEnumerable<TSource> source,
+            Func<TSource, IEnumerable<TCollection>> collectionSelector,
+            Func<TSource, TCollection, TResult> resultSelector)
+        {
+            foreach (TSource item in source)
+            {
+                foreach (TCollection collectionItem in collectionSelector(item))
+                {
+                    yield return resultSelector(item, collectionItem);
+                }
             }
         }
     }
