@@ -612,7 +612,7 @@ namespace ReLINQ
                 throw new ArgumentNullException(nameof(sequence));
             }
 
-            return AnyImplementaion(sequence, predicate);
+            return AnyImplementation(sequence, predicate);
         }
 
         /// <summary>
@@ -622,7 +622,7 @@ namespace ReLINQ
         /// <param name="sequence"></param>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        private static bool AnyImplementaion<TSource>(IEnumerable<TSource> sequence, Func<TSource, bool> predicate)
+        private static bool AnyImplementation<TSource>(IEnumerable<TSource> sequence, Func<TSource, bool> predicate)
         {
             foreach (TSource item in sequence)
             {
@@ -1152,6 +1152,85 @@ namespace ReLINQ
                     yield return item;
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <param name="comparer"></param>
+        /// <returns></returns>
+        public static IEnumerable<TSource> Intersect<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer)
+        {
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+            if (second == null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
+            return IntersectImpl(first, second, comparer ??
+                                                EqualityComparer<TSource>.Default);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <param name="comparer"></param>
+        /// <returns></returns>
+        private static IEnumerable<TSource> IntersectImpl<TSource>(IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer)
+        {
+            HashSet<TSource> set = new HashSet<TSource>(first, comparer);
+
+            foreach (TSource item in second)
+                if (set.Remove(item))
+                    yield return item;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second)
+        {
+            if (first==null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+
+            if (second==null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
+
+            return ExceptImplementation(first, second, EqualityComparer<TSource>.Default);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <param name="comparer"></param>
+        /// <returns></returns>
+        private static IEnumerable<TSource> ExceptImplementation<TSource>(IEnumerable<TSource> first, IEnumerable<TSource> second,
+            IEqualityComparer<TSource> comparer)
+        {
+            HashSet<TSource> set = new HashSet<TSource>(second, comparer);
+
+            foreach (TSource item in first)
+                if (set.Add(item))
+                    yield return item;
         }
     }
 }
